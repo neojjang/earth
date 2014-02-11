@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/Map" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<head>
+    <meta charset="utf-8"/>
+    <title>earth wind map</title>
+    <meta itemprop="name"                                      content="地球"/>
+    <meta itemprop="description"     name="description"        content="世界中の天気状況がビジュアライズ"/>
+    <meta itemprop="author"          name="author"             content="Cameron Beccario"/>
+
+    <meta property="og:type"        content="website"/>
+    <meta property="og:title"       content="지구"/>
+    <meta property="og:description" content="세계의 기상 상황을 비주얼화. 페이스북 커뮤니티는 이곳：https://www.facebook.com/EarthWindMap"/>
+    <meta property="og:url"         content="http://earth.nullschool.net"/>
+    <meta property="og:image"       content="http://earth.nullschool.net/preview.jpg"/>
+    <meta property="fb:admins"      content="510217216"/>
+
+    <link rel="shortcut icon" href="/favicon.ico"/>
+    <link rel="apple-touch-icon" sizes="120x120" href="/iphone-icon.png"/>
+    <link rel="apple-touch-icon" sizes="152x152" href="/ipad-icon.png"/>
+    <link rel="stylesheet" type="text/css" href="/styles/styles.css"/>
+
+    <link rel="alternate" hreflang="x-default" href="http://earth.nullschool.net/"/>
+    <link rel="alternate" hreflang="ja" href="http://earth.nullschool.net/jp/"/>
+</head>
+<body data-lang="ja">
+
+    <!--[if lte IE 8]><p id="warn">이 사이트는 IE9 이상 지원하는 브라우저가 필요합니다.</p><![endif]-->
+
+    <div id="display">
+        <svg id="map" class="fill-screen" xmlns="http://www.w3.org/2000/svg" version="1.1"></svg>
+        <canvas id="animation" class="fill-screen"></canvas>
+        <canvas id="overlay" class="fill-screen"></canvas>
+        <svg id="foreground" class="fill-screen" xmlns="http://www.w3.org/2000/svg" version="1.1"></svg>
+    </div>
+
+    <div id="details">
+        <p id="status"></p>
+        <div id="location">
+            <p>
+                <span id="location-coord"></span>
+                <span id="location-close" class="invisible text-button"> ✕ </span>
+            </p>
+            <p>
+                <span id="location-wind"></span>
+                <span id="location-wind-units" class="text-button"></span>
+            </p>
+            <p>
+                <span id="location-value"></span>
+                <span id="location-value-units" class="text-button"></span>
+            </p>
+        </div>
+        <p id="start">
+            <span id="show-menu" class="text-button" title="menu">지구</span>
+            <span id="progress" class="invisible"></span>
+        </p>
+
+        <div id="menu" class="invisible">
+            <p>날짜 | <span
+                id="data-date" class="local"></span> <span
+                id="toggle-zone" class="text-button"></span>
+            </p>
+            <p>데이타 | <span id="data-layer"></span></p>
+            <p><span id="scale-label">스케일 | </span><canvas id="scale"></canvas></p>
+            <p>발신처 | <span id="data-center"></span></p>
+            <p>조작 | <span
+                class="text-button" id="nav-now" title="현재상황">최신</span><span
+                class="text-button" id="nav-backward-more"> « </span> – <span
+                class="text-button" id="nav-backward"> ‹ </span> – <span
+                class="text-button" id="nav-forward"> › </span> – <span
+                class="text-button" id="nav-forward-more"> » </span><span
+                class="text-button" id="show-location" title="현재위치">〖◯〗</span><span
+                class="text-button" id="option-show-grid" title="Toggle Grid">그리드</span>
+            </p>
+            <p>모드 | <span
+                class="text-button" id="enable-wind-mode">풍속</span> – <span
+                class="text-button" id="enable-ocean-mode">바다</span>
+            </p>
+            <p class="wind-mode">고도 | <span
+                class="text-button" id="surface" title="지상">지상</span> – <span
+                class="text-button" id="iso-1000">1000</span> – <span
+                class="text-button" id="iso-850">850</span> – <span
+                class="text-button" id="iso-700">700</span> – <span
+                class="text-button" id="iso-500">500</span> – <span
+                class="text-button" id="iso-250">250</span> – <span
+                class="text-button" id="iso-70">70</span> – <span
+                class="text-button" id="iso-10">10</span> hPa
+            </p>
+            <p class="wind-mode">레이어 | <span
+                class="text-button" id="off">없음</span> – <span
+                class="text-button" id="wind" title="풍속">풍속</span> – <span
+                class="text-button" id="temp" title="기온">기온</span> – <span
+                class="text-button" id="total_precipitable_water" title="可강수량">可강수량</span> – <span
+                class="text-button" id="total_cloud_water" title="雲水量">雲水量</span> – <span
+                class="text-button" id="mean_sea_level_pressure" title="海面更正気圧">해면기압</span>
+            </p>
+            <p class="ocean-mode invisible">動画 | <span
+                class="text-button" id="animate-currents" title="해류">해류</span>
+            </p>
+            <p class="ocean-mode invisible">레이어 | <span
+                class="text-button" id="ocean-off">없음</span> – <span
+                class="text-button" id="currents" title="해류">해류</span>
+            </p>
+            <p>投影法 | <span
+                class="proj text-button" id="atlantis" title="アトランティス">A</span> – <span
+                class="proj text-button" id="azimuthal_equidistant" title="正距方位">AE</span> – <span
+                class="proj text-button" id="conic_equidistant" title="正距円錐">CE</span> – <span
+                class="proj text-button" id="equirectangular" title="正距円筒">E</span> – <span
+                class="proj text-button" id="orthographic" title="正射">O</span> – <span
+                class="proj text-button" id="stereographic" title="平射">S</span> – <span
+                class="proj text-button" id="waterman" title="ウォーターマン蝶型">WB</span> – <span
+                class="proj text-button" id="winkel3" title="ヴィンケル第3">W3</span>
+            </p>
+            <!--<p>免責事項 | 正確な情報を提供するためのものではありません</p>-->
+            <p id="lang"><a href="/" class="internal-link">English</a></p>
+            <p>
+                <a href="about.html" class="internal-link">사이트에 대해서</a>
+                <a href="https://www.facebook.com/EarthWindMap" class="social-icon" title="Facebook">&#xe027;</a>
+                <a href="https://twitter.com/cambecc" class="social-icon" title="Twitter">&#xe086;</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone-min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.10/d3.min.js" charset="utf-8"></script>
+
+    <script src="/libs/d3.geo/0.0.0/d3.geo.projection.v0.min.js" charset="utf-8"></script>
+    <script src="/libs/d3.geo/0.0.0/d3.geo.polyhedron.v0.min.js" charset="utf-8"></script>
+    <script src="/libs/when/2.6.0/when.js" charset="utf-8"></script>
+
+    <script src="/libs/earth/1.0.0/micro.js" charset="utf-8"></script>
+    <script src="/libs/earth/1.0.0/globes.js" charset="utf-8"></script>
+    <script src="/libs/earth/1.0.0/grids.js" charset="utf-8"></script>
+    <script src="/libs/earth/1.0.0/earth.js" charset="utf-8"></script>
+
+    <script>
+        (function(i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function() { (i[r].q = i[r].q || []).push(arguments); }, i[r].l = 1 * new Date();
+            a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+            a.async = 1; a.src = g; m.parentNode.insertBefore(a, m);
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+        ga('create', 'UA-44235933-2', 'nullschool.net');
+        ga('send', 'pageview');
+    </script>
+
+</body>
+</html>
